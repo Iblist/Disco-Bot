@@ -1,6 +1,9 @@
 ;;;;Functions which perform core operations for the bot, as well as interacts with the websocket
 (in-package :disco-bot)
 
+(defmacro defbot (bot-name bot-token)
+  `(defvar ,bot-name (make-instance 'bot :token ,bot-token)))
+
 (defgeneric start-bot (obj)
   (:documentation "Start of the bots authentication process"))
 
@@ -43,7 +46,7 @@
 	  (setf connected? nil)))))
   
 (defgeneric hello-received (obj message)
-  (:documentation "Spawns a heart beat thread for the bot"))
+  (:documentation "Starts a thread to send heartbeats to the websocket"))
 
 (defmethod hello-received (obj message)
   (with-accessors ((hb-thread hb-thread)
@@ -53,56 +56,6 @@
     (setf hb-thread (make-thread
 		     (lambda ()
 		       (heart-beat obj))))))
-
-(defgeneric authenticate (obj &key os game status)
-  (:documentation "Authenticate bot with websocket"))
-
-(defmethod authenticate (obj &key (os "emacs") (game "with-lisp") (status "Online"))
-  (with-accessors ((token token)
-		   (web-socket web-socket)
-		   (authenticated? authenticated?))
-      obj
-    (send-text web-socket (encode-json-alist-to-string `((:op . 2)
-							 (:d . ((:token . ,token)
-								(:properties . ((:os . ,os)
-										(:browser . "disco-bot")
-										(:device . "disco-bot")))
-								(:presence . ((:game . ((:name . ,game)
-											(:type . 0)))))
-								(:compress . "false")
-								(:large-number . 50)
-								(:status ,status)
-								(:afk "false"))))))
-    (setf authenticated? t)))
-
-(defgeneric resume-bot (obj)
-  (:documentation "Resumes the bots connection, gateway will then replay missed events"))
-
-(defmethod resume-bot (obj)
-  (with-accessors ((token token)
-		   (ws web-socket)
-		   (auth authenticated?)
-		   (id session-id)
-		   (seq sequence-number))
-      obj
-    (print "Resumed")
-    (send-text ws (encode-json-alist-to-string `((:op . 6)
-						 (:d . ((:token . ,token)
-							(:session-id . ,id)
-							(:seq . ,seq))))))
-    (setf auth t)))
-
-(defgeneric update-status (obj status &optional game)
-  (:documentation "Updates the clients status, e.g online, offline, dnd etc"))
-
-(defmethod update-status (obj status &optional (game nil game-supplied-p))
-  (with-slots (web-socket) obj
-    (let ((activity (if game-supplied-p `((:name . ,game)(:type . 0)) nil)))
-      (send-text web-socket (encode-json-alist-to-string `((:op . 3)
-							   (:d . ((:since . nil)
-								  (:game . ,activity)
-								  (:status . ,status)
-								  (:afk . "false")))))))))
 
 (defgeneric heartbeat-recv (obj)
   (:documentation "Checks if bot is authenticated on recieving a heartbeat and then authenticates if required"))
@@ -116,13 +69,13 @@
       (if id (resume-bot obj) (authenticate obj)))))
 
 (defgeneric stop-bot (obj)
-  (:documentation "Disconnects the bot from the websocket, requires a new instance to reconnect"))
+  (:documentation "Sets the bot's online status to invisible. Still connected to the websocket, just appears to be offline."))
 
 (defmethod stop-bot (obj)
-  (update-status obj "invisible")))
+  (update-status obj "invisible"))
 
 (defgeneric get-sequence-number (obj message)
-  (:documentation "Gets sequence number from opcode 0 message and updates bot"))
+  (:documentation "Gets sequence number from opcode 0 message and updates bot. Used when resuming"))
 
 (defmethod get-sequence-number (obj message)
   (with-accessors ((sq sequence-number))
@@ -138,7 +91,7 @@
   (print "Invalid session recieved"))
 
 (defun message-handler (bot type content)
-  """Does something with opcode 0 messages"""
+  """Fires off an event based on what opcode 0 event is recieved on the websocket"""
   (str-case type
 	    ("READY" (on-ready bot content))
 	    ("RESUMED" (on-resumed bot content))

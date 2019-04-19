@@ -1,4 +1,4 @@
-;;;;Functions which interact directly with the discord gateway
+;;;;Functions which interact directly with the discord gateway and REST api
 (in-package :disco-bot)
 
 
@@ -7,7 +7,8 @@
 		:user-agent "DiscordBot (https://github.com/iblist, 1.0)"
 		:method method
 		:content (encode-json-alist-to-string rest)
-		:additional-headers (acons "Authorization" (format nil "Bot ~a" (token client)) nil)))
+		:additional-headers (acons "Authorization"
+					   (format nil "Bot ~a" (token client)) nil)))
 
 (defun get-gateway (uri)
   (multiple-value-bind (body status headers uri stream closedp reason)
@@ -19,7 +20,7 @@
 		     (octets-to-string body)))))))
 
 (defgeneric send-message (obj channel-id message)
-  (:documentation "Used to send messages to the server"))
+  (:documentation "POSTS a message to the restful API to the given channel ID"))
   
 (defmethod send-message (obj channel-id message)
   (let ((formatted-message (encode-json-alist-to-string (acons :content message nil)))
@@ -31,7 +32,7 @@
 		  :additional-headers (acons "Authorization" bot-token nil))))
 
 (defgeneric heart-beat (obj)
-  (:documentation "Used to respond to heartbeats sent by the server"))
+  (:documentation "Used to respond to heartbeats sent by the server. Note, this should probably be in core.lisp, but I'm too lazy to move it right now."))
 
 (defmethod heart-beat (obj)
   (let ((sleep-time (/ (rate obj) 1000))

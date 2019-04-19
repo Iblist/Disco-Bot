@@ -15,13 +15,13 @@
   "https://discordapp.com/api")
 
 (defconstant +user-agent+
-  "DiscordBot (https://github.com/iblist, 1.0)")
+  "Disco-Bot (https://github.com/Iblist/Disco-Bot, 1.0)")
 
 (defconstant +client+
   "disco-bot")
 
 (defconstant +version+
-  "0.1")
+  "0.2")
 
 (defconstant +author+
   "Tyler Hoskins")
@@ -60,9 +60,3 @@
     :accessor sequence-number
     :initform nil
     :documentation "Sequence of op 0 events, used for resuming and heartbeats")))
-
-"""
-(defmethod initialize-instance :after ((a-bot bot) &key)
-  (setf (slot-value a-bot 'web-socket)
-	(make-client +ws-address+)))
-"""

@@ -1,8 +1,8 @@
 (defsystem "disco-bot"
   :description "disco-bot: Discord bot library for common lisp"
-  :version "0.0.1"
+  :version "1.0"
   :author "Tyler Hoskins <tyleryouknowtheginger@gmail.com>"
-  :licence "GPL"
+  :licence "WTFPL"
   :pathname "src/"
   :depends-on ("websocket-driver-client" "drakma" "cl-json" "bt-semaphore" "event-glue")
   :components ((:file "constants")

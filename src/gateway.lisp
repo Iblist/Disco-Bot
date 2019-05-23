@@ -38,7 +38,6 @@
   (let ((sleep-time (/ (rate obj) 1000))
 	(out *standard-output*))
     (loop while (equal (current-thread) (hb-thread obj)) do
-	 (format out "Sending heartbeat...~%")
 	 (send-text (web-socket obj) (encode-json-alist-to-string '((:op . 1) (:d . null))))
 	 (sleep sleep-time))
     (format out "Quitting...")))

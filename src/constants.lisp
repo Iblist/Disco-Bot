@@ -21,8 +21,8 @@
   "disco-bot")
 
 (defconstant +version+
-  "0.2")
-
+  "1.0")
+  
 (defconstant +author+
   "Tyler Hoskins")
 

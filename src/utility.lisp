@@ -10,17 +10,6 @@
 (defun create-payload (message &rest rest)
   (loop for field in rest collect
        (assoc field message)))
-"""
-(defun create-payload (message &rest rest)
-  (declare (ignore rest))
-  message)
-"""
-
-"""
-(defmacro create-payload (message &body body)
-  `(list ,@(loop for field in body collect
-	       `(cdr-assoc ,field ,message))))
-"""
 
 (defun cdr-assoc (item list)
   (cdr (assoc item list)))
